@@ -1,0 +1,25 @@
+{
+  "name": "web-bis-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "homepage": "git@github.com:deka217/dashboard_web_bis.git",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "postbuild": "cp dist/index.html dist/404.html",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist -r git@github.com:deka217/web_bis.git"
+  },
+  "dependencies": {
+    "lucide-react": "^0.523.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.2",
+    "vite": "^5.4.10"
+  }
+}
