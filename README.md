@@ -12,3 +12,17 @@ React dashboard for the Node.js + MySQL backend.
    - `npm run dev`
 
 Default URL: `http://localhost:5173`
+
+## Deploy
+
+GitHub Pages URL:
+
+```txt
+https://deka217.github.io/dashboard_web_bis/
+```
+
+Build and deploy:
+
+```sh
+npm run deploy
+```
