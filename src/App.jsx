@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BadgePercent, LayoutDashboard, Mail, Package, RefreshCw, Star, Tags } from "lucide-react";
+import { BadgePercent, LayoutDashboard, Mail, Package, RefreshCw, Star, Tags, ChevronLeft, ChevronRight, Lock, LogOut } from "lucide-react";
 import { api, API_BASE_URL } from "./api";
 import Logo from "./assets/BIS 1.png";
+import Login from "./views/Login";
 import Overview from "./views/Overview";
 import Brands from "./views/Brands";
 import Categories from "./views/Categories";
 import Products from "./views/Products";
 import Messages from "./views/Messages";
 import Reviews from "./views/Reviews";
+import ChangePassword from "./views/ChangePassword";
 
 const views = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -15,7 +17,8 @@ const views = [
   { id: "categories", label: "Categories", icon: Tags },
   { id: "products", label: "Products", icon: Package },
   { id: "messages", label: "Messages", icon: Mail },
-  { id: "reviews", label: "Reviews", icon: Star }
+  { id: "reviews", label: "Reviews", icon: Star },
+  { id: "change-password", label: "Change Password", icon: Lock }
 ];
 
 const emptyBrandForm = { brandName: "", logoBrand: "", brandID: null };
@@ -53,7 +56,9 @@ function formatDate(dateString) {
 }
 
 function App() {
+  const [admin, setAdmin] = useState(null);
   const [activeView, setActiveView] = useState("overview");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -158,8 +163,18 @@ function App() {
   }
 
   useEffect(() => {
-    loadData();
+    // Check if admin is already logged in
+    const storedAdmin = localStorage.getItem("admin");
+    if (storedAdmin) {
+      setAdmin(JSON.parse(storedAdmin));
+    }
   }, []);
+
+  useEffect(() => {
+    if (admin) {
+      loadData();
+    }
+  }, [admin]);
 
   function resetBrandForm() {
     setBrandForm(emptyBrandForm);
@@ -182,6 +197,26 @@ function App() {
       ...emptyDetailForm,
       productID: selectedDetailsProductID || ""
     });
+  }
+
+  function handleLoginSuccess(adminData) {
+    setAdmin(adminData);
+    setActiveView("overview");
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("admin");
+    setAdmin(null);
+    setActiveView("overview");
+    // Clear all dashboard data
+    setUsers([]);
+    setBrands([]);
+    setCategories([]);
+    setProducts([]);
+    setProductImages([]);
+    setProductDetails([]);
+    setMessages([]);
+    setReviews([]);
   }
 
   async function onSaveBrand(event) {
@@ -502,14 +537,38 @@ function App() {
       return <Reviews reviews={reviews} formatDate={formatDate} />;
     }
 
+    if (activeView === "change-password") {
+      return (
+        <ChangePassword
+          admin={admin}
+          onPasswordChanged={() => setNotice("Password changed successfully!")}
+        />
+      );
+    }
+
     return null;
   }
 
   return (
-    <div className="shell">
+    <>
+      {!admin ? (
+        <Login onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <div className={`shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <aside className="sidebar">
-        <img src={Logo} alt="Logo" />
-        <p>Admin Dashboard</p>
+        <div className="sidebar-header">
+          <img src={Logo} alt="Logo" />
+          {!sidebarCollapsed && <p>Admin Dashboard</p>}
+        </div>
+
+        <button
+          className="sidebar-toggle"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          type="button"
+          title={sidebarCollapsed ? "Expand" : "Collapse"}
+        >
+          {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
 
         <nav>
           {views.map((view) => {
@@ -524,24 +583,34 @@ function App() {
                 title={view.label}
               >
                 <Icon size={16} />
-                <span>{view.label}</span>
+                {!sidebarCollapsed && <span>{view.label}</span>}
               </button>
             );
           })}
         </nav>
 
-        <div className="api-url">
-          <div>API</div>
-          <code>{API_BASE_URL}</code>
-        </div>
+        {!sidebarCollapsed && (
+          <div className="api-url">
+            <div>API</div>
+            {/* <code>{API_BASE_URL}</code> */}
+          </div>
+        )}
       </aside>
 
       <main className="main">
         <header className="topbar">
           <h2>{views.find((view) => view.id === activeView)?.label}</h2>
-          <button className="icon-btn" onClick={loadData} type="button" title="Refresh Data">
-            <RefreshCw size={16} />
-          </button>
+          <div className="topbar-actions">
+            <div className="admin-info">
+              {admin && <span>{admin.firstName} {admin.lastName}</span>}
+            </div>
+            <button className="icon-btn" onClick={loadData} type="button" title="Refresh Data">
+              <RefreshCw size={16} />
+            </button>
+            <button className="icon-btn danger" onClick={handleLogout} type="button" title="Logout">
+              <LogOut size={16} />
+            </button>
+          </div>
         </header>
 
         {error ? <div className="alert error">{error}</div> : null}
@@ -550,7 +619,9 @@ function App() {
 
         {renderActiveView()}
       </main>
-    </div>
+        </div>
+      )}
+    </>
   );
 }
 

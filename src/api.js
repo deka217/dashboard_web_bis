@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://indobiz-solution.com/api";
+// const API_BASE_URL = "http://localhost:4000/api";
 
 async function request(path, options = {}) {
   const isFormData = options.body instanceof FormData;
@@ -34,6 +35,15 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  auth: {
+    login: (username, password) =>
+      request("/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
+    changePassword: (adminID, currentPassword, newPassword) =>
+      request("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ adminID, currentPassword, newPassword })
+      })
+  },
   users: {
     list: () => request("/users")
   },
